@@ -1,45 +1,73 @@
 import "./App.css";
 import React from "react";
-import { useEffect, useState, useCallback } from "react";
-import { Subject, interval } from "rxjs";
-import { takeUntil } from "rxjs/operators";
+import { useEffect, useState } from "react";
+import { Subject, Observable } from "rxjs";
+import { buffer, map, debounceTime, filter } from "rxjs/operators";
 import s from "./secundomer.module.css";
 
 export default function App() {
   const [sec, setSec] = useState(0);
   const [status, setStatus] = useState("stop");
 
-  useEffect(() => {
-    const unsubscribe$ = new Subject();
-    interval(1000)
-      .pipe(takeUntil(unsubscribe$))
-      .subscribe(() => {
-        if (status === "run") {
-          setSec((val) => val + 1000);
-        }
-      });
-    return () => {
-      unsubscribe$.next();
-      unsubscribe$.complete();
-    };
-  }, [status]);
-
-  const start = useCallback(() => {
+  const start = () => {
     setStatus("run");
-  }, []);
+  };
 
-  const stop = useCallback(() => {
+  const stop = () => {
     setStatus("stop");
     setSec(0);
-  }, []);
+  };
 
-  const reset = useCallback(() => {
+  const reset = () => {
     setSec(0);
-  }, []);
+  };
 
-  const wait = useCallback(() => {
-    setStatus("wait");
-  }, []);
+  const wait = () => {
+    waitDoubleClick$.next();
+  };
+
+  const waitDoubleClick$ = new Subject();
+
+  waitDoubleClick$
+    .pipe(
+      buffer(waitDoubleClick$.pipe(debounceTime(300))),
+      map((item) => item.length),
+      filter((item) => item === 2)
+    )
+    .subscribe(() => {
+      setStatus("wait");
+    });
+  useEffect(() => {
+    if (status === "run") {
+      const timer$ = new Observable((observer) => {
+        const intervalId = setInterval(() => {
+          observer.next();
+        }, 1000);
+
+        return () => {
+          clearInterval(intervalId);
+        };
+      });
+      const observer = {
+        next: () => {
+          setSec((val) => val + 1000);
+        },
+        error: () => {
+          console.log("error");
+        },
+        complete: () => {
+          console.log("observer complete");
+        },
+      };
+      const subscription = timer$.subscribe(observer);
+      return () => {
+        subscription.unsubscribe();
+      };
+    }
+    if (status === "reset") {
+      setStatus("run");
+    }
+  }, [status]);
 
   return (
     <div>
