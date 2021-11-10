@@ -19,6 +19,7 @@ export default function App() {
   };
 
   const reset = () => {
+    setStatus("run");
     setSec(0);
   };
 
@@ -65,9 +66,6 @@ export default function App() {
       return () => {
         subscription.unsubscribe();
       };
-    }
-    if (status === "reset") {
-      setStatus("run");
     }
   }, [status]);
 
