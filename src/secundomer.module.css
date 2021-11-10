@@ -1,3 +1,9 @@
+.watch {
+    display:flex;
+    justify-content: center;
+    margin-top: 100px;
+}
+
 .button {
     color: black;
     font-weight: 700;

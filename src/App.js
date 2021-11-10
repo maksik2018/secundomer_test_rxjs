@@ -40,8 +40,10 @@ export default function App() {
   useEffect(() => {
     if (status === "run") {
       const timer$ = new Observable((observer) => {
+        let count = 0;
         const intervalId = setInterval(() => {
-          observer.next();
+          observer.next((count += 1));
+          console.log(count);
         }, 1000);
 
         return () => {
@@ -70,7 +72,7 @@ export default function App() {
   }, [status]);
 
   return (
-    <div>
+    <div className={s.watch}>
       <span> {new Date(sec).toISOString().slice(11, 19)}</span>
       <button className={s.button} onClick={start}>
         Start
